@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     Button setURLBtn;
     ArrayList<String> urls = new ArrayList<String>();
     ArrayList<String> urlTitles= new ArrayList<String>();
-    String baseURL = "http://google.com";
+    String baseURL = "";
 
     int vidCount;
 
@@ -233,40 +233,83 @@ public class MainActivity extends AppCompatActivity
 
     public void ImageFactory(){
         //Dynamically create thumbnail icons
+        Log.i("ImageFactory Clicked" , "");
         for(int i = 0 ; i < urls.size() ; i++){
             //System.out.println("");
+            Bitmap frameImg;
             TextView tv = new TextView(this);
-            tv.setText(urlTitles.get(i));
-            videoHolderLayout.addView(tv);
-//            int id = 1234;
-//            ImageView iv = (ImageView) findViewById(R.id.imageView2);
-//            ContentResolver contentResolver = getContentResolver();
-//            BitmapFactory.Options options = new BitmapFactory.Options();
-//            options.inSampleSize = 1;
-//            Bitmap curThumb = MediaStore.Video.Thumbnails.getThumbnail(contentResolver, id, MediaStore.Video.Thumbnails.MICRO_KIND, options);
+            ImageView imageView = new ImageView(this);
+            //tv.setText(urls.get(i));
+            FrameDownloader frameDownloader = new FrameDownloader();
+            try {
+                frameImg = frameDownloader.execute(urls.get(i)).get();
+//                frameImg = retrieveVideoFrameFromVideo(urls.get(i));
+                imageView.setImageBitmap(frameImg);
+                videoHolderLayout.addView(imageView);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
         }
     }
 
-    public static Bitmap retrieveVideoFramFromVideo(String path) throws Throwable{
-        Bitmap bitmap = null;
-        MediaMetadataRetriever mediaMetadataRetriever = null;
-        try {
-            mediaMetadataRetriever = new MediaMetadataRetriever();
-            if(Build.VERSION.SDK_INT >= 14) {
-                mediaMetadataRetriever.setDataSource(path , new HashMap<String, String>());
-            } else {
-                mediaMetadataRetriever.setDataSource(path);
-            }
+    public class FrameDownloader extends AsyncTask<String, Void, Bitmap> {
 
-            bitmap = mediaMetadataRetriever.getFrameAtTime();
-        } catch (Exception e){
-            e.printStackTrace();
-            throw new Throwable("Exception from rettriveFrameFromVideo");
-        } finally {
-            if (mediaMetadataRetriever != null) {
-                mediaMetadataRetriever.release();
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            try {
+                return retrieveVideoFrameFromVideo(strings[0]);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
             }
+            return null;
         }
-        return bitmap;
+
+
+        public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
+            Bitmap bitmap = null;
+            MediaMetadataRetriever mediaMetadataRetriever = null;
+            try {
+                mediaMetadataRetriever = new MediaMetadataRetriever();
+                if(Build.VERSION.SDK_INT >= 14) {
+                    mediaMetadataRetriever.setDataSource(path , new HashMap<String, String>());
+                } else {
+                    mediaMetadataRetriever.setDataSource(path);
+                }
+
+                bitmap = mediaMetadataRetriever.getFrameAtTime();
+            } catch (Exception e){
+                e.printStackTrace();
+                throw new Throwable("Exception from retrieveFrameFromVideo");
+            } finally {
+                if (mediaMetadataRetriever != null) {
+                    mediaMetadataRetriever.release();
+                }
+            }
+            return bitmap;
+        }
     }
+
+//    public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
+//        Bitmap bitmap = null;
+//        MediaMetadataRetriever mediaMetadataRetriever = null;
+//        try {
+//            mediaMetadataRetriever = new MediaMetadataRetriever();
+//            if(Build.VERSION.SDK_INT >= 14) {
+//                mediaMetadataRetriever.setDataSource(path , new HashMap<String, String>());
+//            } else {
+//                mediaMetadataRetriever.setDataSource(path);
+//            }
+//
+//            bitmap = mediaMetadataRetriever.getFrameAtTime();
+//        } catch (Exception e){
+//            e.printStackTrace();
+//            throw new Throwable("Exception from retrieveFrameFromVideo");
+//        } finally {
+//            if (mediaMetadataRetriever != null) {
+//                mediaMetadataRetriever.release();
+//            }
+//        }
+//        return bitmap;
+//    }
 }
