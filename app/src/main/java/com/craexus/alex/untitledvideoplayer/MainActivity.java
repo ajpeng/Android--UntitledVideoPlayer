@@ -12,6 +12,8 @@ import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -22,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -54,6 +57,7 @@ public class MainActivity extends AppCompatActivity
     Button setURLBtn;
     ArrayList<String> urls = new ArrayList<String>();
     ArrayList<String> urlTitles= new ArrayList<String>();
+    ArrayList<String> hyperlinks= new ArrayList<String>();
     String baseURL = "";
 
     int vidCount;
@@ -203,11 +207,15 @@ public class MainActivity extends AppCompatActivity
                 urls.add(el.absUrl("href"));
                 //get the text associated with the hyperlink
                 urlTitles.add(el.text());
+            } else {
+                hyperlinks.add(el.absUrl("href"));
             }
        }
-        System.out.println(urls.toString());
-        System.out.println(urlTitles.toString());
-        ImageFactory();
+        //System.out.println(urls.toString());
+        //System.out.println(urlTitles.toString());
+        System.out.println();
+        hyperlinkFactory();
+        //ImageFactory();
     }
 
     public void setURL(View view){
@@ -227,8 +235,37 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void fixURL(){
+    public boolean fixURL(String str){
+        return URLUtil.isValidUrl(str);
+    }
 
+    //Create a textview containing hyperlinks of all non-media content
+    public void hyperlinkFactory(){
+//        TextView textView = new TextView(this);
+//        textView.setText("RUNNING");
+
+        for(int i=0 ; i < hyperlinks.size() ; i++){
+            //textView.setText(Integer.toString(i));
+            crawlLinks(hyperlinks.get(i).toString());
+        }
+        //textView.setText("FINISHED");
+    }
+
+    public void crawlLinks(String url){
+        TextView textView = new TextView(this);
+        //append tags
+        String linkedText = String.format("<a href=\"%s\">%s</a> ", url , url);
+        textView.setText(Html.fromHtml(linkedText));
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        videoHolderLayout.addView(textView);
+    }
+
+    public class FindLinks extends AsyncTask<String , Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            return null;
+        }
     }
 
     public void ImageFactory(){
@@ -253,7 +290,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public class FrameDownloader extends AsyncTask<String, Void, Bitmap> {
-
 
         @Override
         protected Bitmap doInBackground(String... strings) {
