@@ -53,14 +53,14 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     LinearLayout videoHolderLayout;
+    LinearLayout linkHolderLayout;
     EditText urlLink;
     Button setURLBtn;
     ArrayList<String> urls = new ArrayList<String>();
     ArrayList<String> urlTitles= new ArrayList<String>();
     ArrayList<String> hyperlinks= new ArrayList<String>();
+    String tempUrl;
     String baseURL = "";
-
-    int vidCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity
         setURLBtn = (Button) findViewById(R.id.button);
         //Browser to find file
 
+        linkHolderLayout = (LinearLayout) findViewById(R.id.linkContainerLayout);
         videoHolderLayout = (LinearLayout) findViewById(R.id.thumbnailLayout);
 
     }
@@ -117,6 +118,7 @@ public class MainActivity extends AppCompatActivity
                     result += currentChar;
                     data = reader.read();
                 }
+                in.close();
                 return result;
 
             } catch (MalformedURLException e) {
@@ -190,12 +192,11 @@ public class MainActivity extends AppCompatActivity
         String domain= "<h1>Index of";
         Pattern p = Pattern.compile("<h>");
         Matcher m = p.matcher(domain);
-
     }
 
-    public void parseData(String input){
+    public void parseData(String input , String bURL){
         Document doc = Jsoup.parse(input);
-        doc.setBaseUri(baseURL);
+        doc.setBaseUri(bURL);
         Elements content = doc.getElementsByTag("a");
         Log.i("i", "----------------------------------------------");
         //if it's hyperlink tag check if its a video format
@@ -213,7 +214,7 @@ public class MainActivity extends AppCompatActivity
        }
         //System.out.println(urls.toString());
         //System.out.println(urlTitles.toString());
-        System.out.println();
+        System.out.println("-------------------------------------------------------------------123456789");
         hyperlinkFactory();
         //ImageFactory();
     }
@@ -228,7 +229,7 @@ public class MainActivity extends AppCompatActivity
           //  result = urlLink.getText().toString();
             result = downloadTask.execute(baseURL).get();
             //Log.i("Result" , result);
-            parseData(result);
+            parseData(result , baseURL);
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -251,13 +252,21 @@ public class MainActivity extends AppCompatActivity
         //textView.setText("FINISHED");
     }
 
-    public void crawlLinks(String url){
+    public void crawlLinks(final String url){
         TextView textView = new TextView(this);
         //append tags
-        String linkedText = String.format("<a href=\"%s\">%s</a> ", url , url);
-        textView.setText(Html.fromHtml(linkedText));
+        //String linkedText = String.format("<a href=\"%s\">%s</a> ", url , url);
+        //textView.setText(Html.fromHtml(linkedText));
+        textView.setText(url);
         textView.setMovementMethod(LinkMovementMethod.getInstance());
-        videoHolderLayout.addView(textView);
+        textView.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                generateNewLinks(url);
+            }
+        });
+        linkHolderLayout.addView(textView);
     }
 
     public class FindLinks extends AsyncTask<String , Void, String> {
@@ -326,6 +335,30 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    public void generateNewLinks(String url){
+        linkHolderLayout.removeAllViews();
+
+        String result;
+        DownloadTask downloadTask = new DownloadTask();
+
+        Log.i("url", urlLink.getText().toString());
+
+        try{
+            //  result = urlLink.getText().toString();
+            result = downloadTask.execute(url).get();
+            //Log.i("Result" , result);
+            urls.clear();
+            urlTitles.clear();
+            hyperlinks.clear();
+            parseData(result, url);
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
 //    public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
 //        Bitmap bitmap = null;
 //        MediaMetadataRetriever mediaMetadataRetriever = null;
