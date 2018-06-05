@@ -1,10 +1,12 @@
 package com.craexus.alex.untitledvideoplayer;
 
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -194,6 +196,11 @@ public class MainActivity extends AppCompatActivity
         Matcher m = p.matcher(domain);
     }
 
+    /**
+     * Parse the data and store the contents as an ArrayList in urls , urlTitles, and hyperlinks
+     * @param input the html raw content as
+     * @param bURL base url for recursive calls
+     */
     public void parseData(String input , String bURL){
         Document doc = Jsoup.parse(input);
         doc.setBaseUri(bURL);
@@ -219,6 +226,10 @@ public class MainActivity extends AppCompatActivity
         //ImageFactory();
     }
 
+    /**
+     * The onClick method for button
+     * @param view Button is passed
+     */
     public void setURL(View view){
         String result;
         DownloadTask downloadTask = new DownloadTask();
@@ -227,15 +238,22 @@ public class MainActivity extends AppCompatActivity
 
         try{
           //  result = urlLink.getText().toString();
+            //get HTML content of website and store as result
             result = downloadTask.execute(baseURL).get();
             //Log.i("Result" , result);
             parseData(result , baseURL);
+            launchVideo(urls.get(0).toString());
 
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Given that the user gives an incorrect url return is the url is either valid or invalid
+     * @param str
+     * @return
+     */
     public boolean fixURL(String str){
         return URLUtil.isValidUrl(str);
     }
@@ -298,6 +316,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Async class to retrieve thumbnails of video files
+     */
     public class FrameDownloader extends AsyncTask<String, Void, Bitmap> {
 
         @Override
@@ -336,6 +357,10 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /**
+     *
+     * @param url
+     */
     public void generateNewLinks(String url){
         linkHolderLayout.removeAllViews();
 
@@ -358,6 +383,12 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+    }
+
+    public void launchVideo(String videoPath){
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videoPath));
+        intent.setDataAndType(Uri.parse(videoPath), "video/mp4");
+        startActivity(intent);
     }
 //    public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
 //        Bitmap bitmap = null;
