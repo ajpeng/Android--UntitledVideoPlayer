@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.jsoup.Jsoup;
@@ -56,12 +57,14 @@ public class MainActivity extends AppCompatActivity
 
     LinearLayout videoHolderLayout;
     LinearLayout linkHolderLayout;
+    ProgressBar progressBar;
     EditText urlLink;
     Button setURLBtn;
     ArrayList<String> urls = new ArrayList<String>();
     ArrayList<String> urlTitles= new ArrayList<String>();
     ArrayList<String> hyperlinks= new ArrayList<String>();
     String tempUrl;
+    int count;
     String baseURL = "";
 
     @Override
@@ -95,7 +98,7 @@ public class MainActivity extends AppCompatActivity
 
         linkHolderLayout = (LinearLayout) findViewById(R.id.linkContainerLayout);
         videoHolderLayout = (LinearLayout) findViewById(R.id.thumbnailLayout);
-
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
     }
 
     // Downloads the HTML content of web page to get the links
@@ -189,13 +192,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    // Regex approach to strip links
-    public void findDirectories(){
-        String domain= "<h1>Index of";
-        Pattern p = Pattern.compile("<h>");
-        Matcher m = p.matcher(domain);
-    }
-
     /**
      * Parse the data and store the contents as an ArrayList in urls , urlTitles, and hyperlinks
      * @param input the html raw content as
@@ -222,8 +218,6 @@ public class MainActivity extends AppCompatActivity
         //System.out.println(urls.toString());
         //System.out.println(urlTitles.toString());
         System.out.println("-------------------------------------------------------------------123456789");
-        hyperlinkFactory();
-        //ImageFactory();
     }
 
     /**
@@ -242,7 +236,25 @@ public class MainActivity extends AppCompatActivity
             result = downloadTask.execute(baseURL).get();
             //Log.i("Result" , result);
             parseData(result , baseURL);
-            launchVideo(urls.get(0).toString());
+            //launchVideo(urls.get(0).toString());
+            //hyperlinkFactory();
+            ImageFactory();
+
+            // Test Example
+//            FrameDownloader ft = new FrameDownloader();
+//            Bitmap bm;
+//            final String testVid = "";
+//            bm = ft.execute(testVid).get();
+//            ImageView iv = new ImageView(this);
+//            iv.setImageBitmap(bm);
+//            iv.setOnClickListener(new View.OnClickListener(){
+//
+//                @Override
+//                public void onClick(View v) {
+//                    launchVideo(testVid);
+//                }
+//            });
+//            videoHolderLayout.addView(iv);
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -295,13 +307,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Calls FrameDownloader to download files
+     */
     public void ImageFactory(){
         //Dynamically create thumbnail icons
         Log.i("ImageFactory Clicked" , "");
         for(int i = 0 ; i < urls.size() ; i++){
             //System.out.println("");
+            count = i;
             Bitmap frameImg;
-            TextView tv = new TextView(this);
+            //TextView tv = new TextView(this);
             ImageView imageView = new ImageView(this);
             //tv.setText(urls.get(i));
             FrameDownloader frameDownloader = new FrameDownloader();
@@ -319,11 +335,12 @@ public class MainActivity extends AppCompatActivity
     /**
      * Async class to retrieve thumbnails of video files
      */
-    public class FrameDownloader extends AsyncTask<String, Void, Bitmap> {
+    public class FrameDownloader extends AsyncTask<String, Integer, Bitmap> {
 
         @Override
         protected Bitmap doInBackground(String... strings) {
             try {
+                publishProgress(count);
                 return retrieveVideoFrameFromVideo(strings[0]);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
@@ -331,6 +348,16 @@ public class MainActivity extends AppCompatActivity
             return null;
         }
 
+        protected void onPreExecute(){
+            Log.i("onPrexecute" ,"Running");
+            progressBar.setMax(urls.size());
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            //super.onProgressUpdate(values);
+            progressBar.setProgress(values[0]);
+        }
 
         public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
             Bitmap bitmap = null;
@@ -390,26 +417,4 @@ public class MainActivity extends AppCompatActivity
         intent.setDataAndType(Uri.parse(videoPath), "video/mp4");
         startActivity(intent);
     }
-//    public Bitmap retrieveVideoFrameFromVideo(String path) throws Throwable{
-//        Bitmap bitmap = null;
-//        MediaMetadataRetriever mediaMetadataRetriever = null;
-//        try {
-//            mediaMetadataRetriever = new MediaMetadataRetriever();
-//            if(Build.VERSION.SDK_INT >= 14) {
-//                mediaMetadataRetriever.setDataSource(path , new HashMap<String, String>());
-//            } else {
-//                mediaMetadataRetriever.setDataSource(path);
-//            }
-//
-//            bitmap = mediaMetadataRetriever.getFrameAtTime();
-//        } catch (Exception e){
-//            e.printStackTrace();
-//            throw new Throwable("Exception from retrieveFrameFromVideo");
-//        } finally {
-//            if (mediaMetadataRetriever != null) {
-//                mediaMetadataRetriever.release();
-//            }
-//        }
-//        return bitmap;
-//    }
-}
+
